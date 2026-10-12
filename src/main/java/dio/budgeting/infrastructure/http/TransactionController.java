@@ -1,7 +1,7 @@
 package dio.budgeting.infrastructure.http;
 
 import dio.budgeting.application.ListTransactionsByCategoryUseCase;
-import dio.budgeting.application.ListTransactionsByMonthUseCase;
+import dio.budgeting.application.ListTransactionsByDateUseCase;
 import dio.budgeting.application.PersistTransactionUseCase;
 import dio.budgeting.domain.Category;
 import dio.budgeting.infrastructure.http.request.TransactionRequest;
@@ -18,7 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.time.Month;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -26,7 +26,7 @@ import java.util.List;
 public class TransactionController {
     private final PersistTransactionUseCase persistTransactionUseCase;
     private final ListTransactionsByCategoryUseCase listTransactionsByCategoryUseCase;
-    private final ListTransactionsByMonthUseCase listTransactionsByMonthUseCase;
+    private final ListTransactionsByDateUseCase listTransactionsByDateUseCase;
 
     private final TranscriptionModel transcriptionModel;
     private final ChatClient chatClient;
@@ -34,14 +34,14 @@ public class TransactionController {
 
     public TransactionController(PersistTransactionUseCase persistTransactionUseCase,
                                  ListTransactionsByCategoryUseCase listTransactionsByCategoryUseCase,
-                                 ListTransactionsByMonthUseCase listTransactionsByMonthUseCase,
+                                 ListTransactionsByDateUseCase listTransactionsByDateUseCase,
                                  TranscriptionModel transcriptionModel,
                                  @Value("classpath:prompts/system-message.st") Resource systemPrompt,
                                  ChatClient.Builder chatClientBuilder,
                                  TextToSpeechModel textToSpeechModel) throws IOException {
         this.persistTransactionUseCase = persistTransactionUseCase;
         this.listTransactionsByCategoryUseCase = listTransactionsByCategoryUseCase;
-        this.listTransactionsByMonthUseCase = listTransactionsByMonthUseCase;
+        this.listTransactionsByDateUseCase = listTransactionsByDateUseCase;
         this.transcriptionModel = transcriptionModel;
         this.chatClient = chatClientBuilder
                 .defaultSystem(systemPrompt.getContentAsString(Charset.defaultCharset()))
@@ -52,15 +52,6 @@ public class TransactionController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    /*
-    REQUEST TEMPLATE
-    {
-        "description":"Lanche da tarde",
-        "category":"GROCERIES",
-        "amount":"20",
-        "date":"2026-08-03"
-    }
-     */
     public TransactionResponse createTransaction(@RequestBody TransactionRequest request) {
         var transaction = persistTransactionUseCase.execute(request.toInput());
         return TransactionResponse.from(transaction);
@@ -71,10 +62,10 @@ public class TransactionController {
         return listTransactionsByCategoryUseCase.execute(category).stream().map(TransactionResponse::from).toList();
     }
 
-    @GetMapping("/month/{month}")
-    public List<TransactionResponse> readTransactionsByMonth(@PathVariable Month month) {
-//    TODO: descobrir como o mês pode ser usado corretamente como parâmetro.
-        return listTransactionsByMonthUseCase.execute(month).stream().map(TransactionResponse::from).toList();
+    @GetMapping("/interval/{startDate}&{endDate}")
+    public List<TransactionResponse> readTransactionsByDateInterval(@PathVariable LocalDate startDate, @PathVariable LocalDate endDate) {
+        return listTransactionsByDateUseCase.execute(startDate, endDate)
+                .stream().map(TransactionResponse::from).toList();
     }
 
     @PostMapping(value = "/ai", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = "audio/mp3")

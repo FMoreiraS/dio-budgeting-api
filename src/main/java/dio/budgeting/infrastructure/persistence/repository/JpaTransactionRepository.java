@@ -5,7 +5,9 @@ import dio.budgeting.domain.Transaction;
 import dio.budgeting.domain.TransactionRepository;
 import dio.budgeting.infrastructure.persistence.entity.TransactionEntity;
 import org.springframework.stereotype.Repository;
+import org.springframework.web.bind.annotation.RequestParam;
 
+import java.time.LocalDate;
 import java.time.Month;
 import java.util.List;
 
@@ -32,8 +34,8 @@ public class JpaTransactionRepository implements TransactionRepository {
     }
 
     @Override
-    public List<Transaction> findAllByMonth(Month month) {
-        return transactionEntityRepository.findAllByMonth(month)
+    public List<Transaction> findAllByDateBetweenOrderByDate(LocalDate startDate, LocalDate endDate) {
+        return transactionEntityRepository.findAllByDateBetweenOrderByDate(startDate, endDate)
                 .stream()
                 .map(TransactionEntity::toDomain)
                 .toList();
