@@ -1,5 +1,6 @@
 package dio.budgeting.infrastructure.http;
 
+import dio.budgeting.application.ListAllTransactionsUseCase;
 import dio.budgeting.application.ListTransactionsByCategoryUseCase;
 import dio.budgeting.application.ListTransactionsByDateUseCase;
 import dio.budgeting.application.PersistTransactionUseCase;
@@ -25,6 +26,7 @@ import java.util.List;
 @RequestMapping("/transactions")
 public class TransactionController {
     private final PersistTransactionUseCase persistTransactionUseCase;
+    private final ListAllTransactionsUseCase listAllTransactionsUseCase;
     private final ListTransactionsByCategoryUseCase listTransactionsByCategoryUseCase;
     private final ListTransactionsByDateUseCase listTransactionsByDateUseCase;
 
@@ -33,6 +35,7 @@ public class TransactionController {
     private final TextToSpeechModel textToSpeechModel;
 
     public TransactionController(PersistTransactionUseCase persistTransactionUseCase,
+                                 ListAllTransactionsUseCase listAllTransactionsUseCase,
                                  ListTransactionsByCategoryUseCase listTransactionsByCategoryUseCase,
                                  ListTransactionsByDateUseCase listTransactionsByDateUseCase,
                                  TranscriptionModel transcriptionModel,
@@ -40,6 +43,7 @@ public class TransactionController {
                                  ChatClient.Builder chatClientBuilder,
                                  TextToSpeechModel textToSpeechModel) throws IOException {
         this.persistTransactionUseCase = persistTransactionUseCase;
+        this.listAllTransactionsUseCase = listAllTransactionsUseCase;
         this.listTransactionsByCategoryUseCase = listTransactionsByCategoryUseCase;
         this.listTransactionsByDateUseCase = listTransactionsByDateUseCase;
         this.transcriptionModel = transcriptionModel;
@@ -55,6 +59,11 @@ public class TransactionController {
     public TransactionResponse createTransaction(@RequestBody TransactionRequest request) {
         var transaction = persistTransactionUseCase.execute(request.toInput());
         return TransactionResponse.from(transaction);
+    }
+
+    @GetMapping
+    public List<TransactionResponse> readTransactions() {
+        return listAllTransactionsUseCase.execute().stream().map(TransactionResponse::from).toList();
     }
 
     @GetMapping("/category/{category}")

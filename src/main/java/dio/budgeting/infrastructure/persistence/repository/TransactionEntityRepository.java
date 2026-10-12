@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.UUID;
 
 public interface TransactionEntityRepository extends CrudRepository<TransactionEntity, UUID> {
+    List<TransactionEntity> findAll();
     List<TransactionEntity> findAllByCategory(Category category);
     List<TransactionEntity> findAllByDateBetweenOrderByDate(LocalDate startDate, LocalDate endDate);
 }
