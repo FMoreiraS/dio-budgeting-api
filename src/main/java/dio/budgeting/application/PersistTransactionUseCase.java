@@ -7,6 +7,8 @@ import dio.budgeting.domain.TransactionRepository;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+
 @Service
 public class PersistTransactionUseCase {
     private final TransactionRepository transactionRepository;
@@ -18,7 +20,7 @@ public class PersistTransactionUseCase {
     @Tool(name = "persist-transaction", description = "Persiste uma nova transação financeira")
     public TransactionOutput execute(PersistTransactionInput input) {
         var transaction = transactionRepository.save(
-                new Transaction(input.description(), input.amount(), input.category(), input.date()));
+                new Transaction(input.description(), input.amount(), input.category(), input.date().orElse(LocalDate.now())));
 
         return TransactionOutput.from(transaction);
     }

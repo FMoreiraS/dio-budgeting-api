@@ -11,7 +11,7 @@ public record TransactionRequest(String description, Category category, long amo
         return new PersistTransactionInput(description,
                 amount,
                 category,
-                date.orElseGet(LocalDate::now)
+                date
         );
     }
 }
